@@ -5,6 +5,11 @@ permissions:
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (leave empty to use latest)'
+        required: false
+        type: string
 
 jobs:
   modify-extension:
@@ -27,11 +32,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq unzip
 
-      - name: Download Latest VSIX
+      - name: Download VSIX
         run: |
           PUBLISHER="augment"
           EXTENSION_NAME="vscode-augment"
-          VSIX_URL="https://marketplace.visualstudio.com/_apis/public/gallery/publishers/${PUBLISHER}/vsextensions/${EXTENSION_NAME}/latest/vspackage"
+          if [ -n "${{ inputs.version }}" ]; then
+            # Download phiên bản cụ thể
+            VERSION="${{ inputs.version }}"
+            VSIX_URL="https://marketplace.visualstudio.com/_apis/public/gallery/publishers/${PUBLISHER}/vsextensions/${EXTENSION_NAME}/${VERSION}/vspackage"
+            echo "Downloading specific version: ${VERSION}"
+          else
+            # Download phiên bản latest
+            VSIX_URL="https://marketplace.visualstudio.com/_apis/public/gallery/publishers/${PUBLISHER}/vsextensions/${EXTENSION_NAME}/latest/vspackage"
+            echo "Downloading latest version"
+          fi
           curl -L --compressed -o original.vsix "${VSIX_URL}"
           echo "VSIX downloaded successfully."
 
